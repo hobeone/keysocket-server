@@ -18,13 +18,14 @@
 package main
 
 import (
-	"code.google.com/p/go.net/websocket"
 	"flag"
+	"log"
+	"net/http"
+
+	"code.google.com/p/go.net/websocket"
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/keybind"
 	"github.com/BurntSushi/xgbutil/xevent"
-	"log"
-	"net/http"
 )
 
 type websocket_connections struct {
@@ -133,12 +134,12 @@ var prev_key = flag.String("pause_key", "XF86AudioPrev", "Key to skip to previou
 
 func main() {
 	flag.Parse()
-  // Maybe make this flag or config file settable.
-  var keymap = map[string]string{
-  	*next_key: "19", // next
-  	*prev_key: "20", // prev
-  	*play_key: "16", // play/pause
-  }
+	// Maybe make this flag or config file settable.
+	var keymap = map[string]string{
+		*next_key: "19", // next
+		*prev_key: "20", // prev
+		*play_key: "16", // play/pause
+	}
 
 	go h.run()
 	go BindKeys(keymap)
