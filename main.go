@@ -129,16 +129,18 @@ func BindKeys(keymap map[string]string) {
 
 var addr = flag.String("addr", "localhost:1337", "http service address")
 var next_key = flag.String("next_key", "XF86AudioNext", "Key to skip to next track.")
-var play_key = flag.String("play_key", "XF86AudioPlay", "Key to play and pause.")
-var prev_key = flag.String("pause_key", "XF86AudioPrev", "Key to skip to previous track.")
+var prev_key = flag.String("prev_key", "XF86AudioPrev", "Key to skip to previous track.")
+var play_key = flag.String("play_key", "XF86AudioPlay", "Key to play .")
+var pause_key = flag.String("pause_key", "XF86AudioPause", "Key to pause.")
 
 func main() {
 	flag.Parse()
 	// Maybe make this flag or config file settable.
 	var keymap = map[string]string{
-		*next_key: "19", // next
-		*prev_key: "20", // prev
-		*play_key: "16", // play/pause
+		*next_key:  "19", // next
+		*prev_key:  "20", // prev
+		*play_key:  "16", // play
+		*pause_key: "16", // pause
 	}
 
 	go h.run()
