@@ -21,6 +21,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"time"
 
 	"code.google.com/p/go.net/websocket"
 	"github.com/BurntSushi/xgbutil"
@@ -43,6 +44,8 @@ var h = websocket_connections{
 }
 
 func (h *websocket_connections) run() {
+	lastEvent := time.Now()
+	eventTimeout := 50 * time.Millisecond
 	for {
 		select {
 		case c := <-h.register:
@@ -52,13 +55,22 @@ func (h *websocket_connections) run() {
 			close(c.send)
 		case m := <-h.broadcast:
 			log.Printf("Sending %q\n", m)
-			for c := range h.connections {
-				select {
-				case c.send <- m:
-				default:
-					delete(h.connections, c)
-					close(c.send)
-					go c.ws.Close()
+
+			execEvent := true
+			if time.Now().Sub(lastEvent) < eventTimeout {
+				execEvent = false
+			}
+			lastEvent = time.Now()
+
+			if execEvent {
+				for c := range h.connections {
+					select {
+					case c.send <- m:
+					default:
+						delete(h.connections, c)
+						close(c.send)
+						go c.ws.Close()
+					}
 				}
 			}
 		}
