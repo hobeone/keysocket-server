@@ -21,6 +21,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"time"
 
 	"code.google.com/p/go.net/websocket"
 	"github.com/BurntSushi/xgbutil"
@@ -43,6 +44,8 @@ var h = websocket_connections{
 }
 
 func (h *websocket_connections) run() {
+	lastEvent := time.Now()
+	eventTimeout := 50 * time.Millisecond
 	for {
 		select {
 		case c := <-h.register:
@@ -52,13 +55,22 @@ func (h *websocket_connections) run() {
 			close(c.send)
 		case m := <-h.broadcast:
 			log.Printf("Sending %q\n", m)
-			for c := range h.connections {
-				select {
-				case c.send <- m:
-				default:
-					delete(h.connections, c)
-					close(c.send)
-					go c.ws.Close()
+
+			execEvent := true
+			if time.Now().Sub(lastEvent) < eventTimeout {
+				execEvent = false
+			}
+			lastEvent = time.Now()
+
+			if execEvent {
+				for c := range h.connections {
+					select {
+					case c.send <- m:
+					default:
+						delete(h.connections, c)
+						close(c.send)
+						go c.ws.Close()
+					}
 				}
 			}
 		}
@@ -129,16 +141,18 @@ func BindKeys(keymap map[string]string) {
 
 var addr = flag.String("addr", "localhost:1337", "http service address")
 var next_key = flag.String("next_key", "XF86AudioNext", "Key to skip to next track.")
-var play_key = flag.String("play_key", "XF86AudioPlay", "Key to play and pause.")
-var prev_key = flag.String("pause_key", "XF86AudioPrev", "Key to skip to previous track.")
+var prev_key = flag.String("prev_key", "XF86AudioPrev", "Key to skip to previous track.")
+var play_key = flag.String("play_key", "XF86AudioPlay", "Key to play .")
+var pause_key = flag.String("pause_key", "XF86AudioPause", "Key to pause.")
 
 func main() {
 	flag.Parse()
 	// Maybe make this flag or config file settable.
 	var keymap = map[string]string{
-		*next_key: "19", // next
-		*prev_key: "20", // prev
-		*play_key: "16", // play/pause
+		*next_key:  "19", // next
+		*prev_key:  "20", // prev
+		*play_key:  "16", // play
+		*pause_key: "16", // pause
 	}
 
 	go h.run()
